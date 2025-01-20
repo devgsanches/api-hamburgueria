@@ -1,8 +1,10 @@
 const express = require('express')
+const cors = require('cors')
 const app = express() // created server
-const port = 3000
+const port = 3001
 
 app.use(express.json())
+app.use(cors())
 
 const { v4: uuidv4 } = require('uuid'); // lib uuid
 const orders = [];
@@ -20,33 +22,23 @@ const checkOrderId = (req, res, next) => {
     next()
 }
 
-const checkMethodAndUrl = (req, res, next) => {
-    const { method, url } = req
-
-    console.log(`A Rota é do tipo ${method}, e o PATH é ${url}.`)
-
-    next()
-}
-
-app.use(checkMethodAndUrl)
+app.get('/order', (req, res) => {
+    return res.status(200).json(orders)
+})
 
 app.post('/order', (req, res) => {
-    const { order, clientName, price } = req.body
-    const clientOrder = { id: uuidv4(), order, clientName, price, status: "Em preparação" }
+    const { order, clientName } = req.body
+    const clientOrder = { id: uuidv4(), order, clientName }
 
     orders.push(clientOrder)
     return res.status(200).json(clientOrder)
 })
 
-app.get('/order', (req, res) => {
-    return res.status(200).json(orders)
-})
-
 app.put('/order/:id', checkOrderId, (req, res) => {
     const { id, index } = req
 
-    const { order, clientName, price, status } = req.body
-    const updateOrder = { id, order, clientName, price, status }
+    const { order, clientName } = req.body
+    const updateOrder = { id, order, clientName }
 
     orders[index] = updateOrder
 
@@ -60,22 +52,6 @@ app.delete('/order/:id', checkOrderId, (req, res) => {
     return res.status(204).json()
 })
 
-app.get('/order/:id', checkOrderId, (req, res) => {
-    const { index } = req
-    const order = orders[index]
-
-    return res.status(200).json(order)
-})
-
-app.patch('/order/:id', checkOrderId, (req, res) => {
-    const { index } = req
-
-    const order = orders[index]
-    order.status = "Pronto"
-
-    return res.status(200).json(order)
-})
-
 app.listen(port, () => {
-    console.log('🚀 Server started')
+    console.log(`🚀 Server started in port ${port}`)
 })
